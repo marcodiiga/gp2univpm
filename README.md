@@ -1,2 +1,2 @@
 # gp2univpm
-Code samples repository - GPGPU seminar @ univpm.it
+Code samples for the GPGPU seminar held by Alesiani Marco at Univpm (Polytechnic University of Ancona)
