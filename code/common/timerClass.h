@@ -37,8 +37,8 @@
 
 typedef struct 
 {
-	LARGE_INTEGER start;
-	LARGE_INTEGER stop;
+    LARGE_INTEGER start;
+    LARGE_INTEGER stop;
 } stopWatch;
 
 // To measure time accurately under Windows systems the QueryPerformanceCounter API can be used
@@ -46,36 +46,36 @@ typedef struct
 class CStopWatch 
 {
 private:
-	stopWatch timer;
-	LARGE_INTEGER frequency;
+    stopWatch timer;
+    LARGE_INTEGER frequency;
 
-	// Returns the number of seconds (with a double value) elapsed
-	double LIToSecs(LARGE_INTEGER & L)
-	{
-		return ((double)L.QuadPart /(double)frequency.QuadPart) ;
-	}
+    // Returns the number of seconds (with a double value) elapsed
+    double LIToSecs(LARGE_INTEGER & L)
+    {
+        return ((double)L.QuadPart /(double)frequency.QuadPart) ;
+    }
 
 public:
-	CStopWatch()
-	{
-		timer.start.QuadPart=0;
-		timer.stop.QuadPart=0; 
-		// Retrieves the frequency of the high-resolution performance counter, if one exists. 
-		// The frequency cannot change while the system is running.
-		QueryPerformanceFrequency(&frequency) ;
-	}
-	void startTimer()
-	{
-		QueryPerformanceCounter(&timer.start) ;
-	}
-	void stopTimer()
-	{
-		QueryPerformanceCounter(&timer.stop) ;
-	}
-	double getElapsedTimeInSeconds()
-	{
-		LARGE_INTEGER time;
-		time.QuadPart = timer.stop.QuadPart - timer.start.QuadPart;
-		return LIToSecs(time) ;
-	}
+    CStopWatch()
+    {
+        timer.start.QuadPart=0;
+        timer.stop.QuadPart=0; 
+        // Retrieves the frequency of the high-resolution performance counter, if one exists. 
+        // The frequency cannot change while the system is running.
+        QueryPerformanceFrequency(&frequency) ;
+    }
+    void startTimer()
+    {
+        QueryPerformanceCounter(&timer.start) ;
+    }
+    void stopTimer()
+    {
+        QueryPerformanceCounter(&timer.stop) ;
+    }
+    double getElapsedTimeInSeconds()
+    {
+        LARGE_INTEGER time;
+        time.QuadPart = timer.stop.QuadPart - timer.start.QuadPart;
+        return LIToSecs(time) ;
+    }
 };

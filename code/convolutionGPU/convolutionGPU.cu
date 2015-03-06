@@ -39,45 +39,45 @@ __constant__ float constantKernelSum;
 __global__ void convolutionGPUKernel(unsigned char* image, unsigned char* resultImage, int rawImageWidth, int rawImageHeight, int pixelSize) { // GPU main kernel
     
     int startRawImageX = blockDim.x * blockIdx.x + threadIdx.x;
-	int rawImageX = startRawImageX;
+    int rawImageX = startRawImageX;
     int rawImageY = blockDim.y * blockIdx.y + threadIdx.y;
 
-	for (; rawImageY < rawImageHeight; rawImageY += blockDim.y * gridDim.y)	{ // Work while this thread is inside the image data, otherwise bail out
+    for (; rawImageY < rawImageHeight; rawImageY += blockDim.y * gridDim.y)	{ // Work while this thread is inside the image data, otherwise bail out
 
-		for (rawImageX = startRawImageX; rawImageX < rawImageWidth; rawImageX += blockDim.x * gridDim.x)	{ // proceed to X-grid exhaustion then consume Y
+        for (rawImageX = startRawImageX; rawImageX < rawImageWidth; rawImageX += blockDim.x * gridDim.x)	{ // proceed to X-grid exhaustion then consume Y
 
-			float channelSum = 0;
-			for (int ky = 0; ky < KERNEL_HEIGHT; ++ky) { // Kernel loop
-				for (int kx = 0; kx < KERNEL_WIDTH; ++kx) {
+            float channelSum = 0;
+            for (int ky = 0; ky < KERNEL_HEIGHT; ++ky) { // Kernel loop
+                for (int kx = 0; kx < KERNEL_WIDTH; ++kx) {
     
-					float pixelChannelValue;
-					int requestedRawXpos = rawImageX - (KERNEL_WIDTH  / 2 + kx) * pixelSize; // Raw image relative coords
-					int requestedRawYpos = rawImageY - (KERNEL_HEIGHT / 2 + ky); // Raw image relative coords
+                    float pixelChannelValue;
+                    int requestedRawXpos = rawImageX - (KERNEL_WIDTH  / 2 + kx) * pixelSize; // Raw image relative coords
+                    int requestedRawYpos = rawImageY - (KERNEL_HEIGHT / 2 + ky); // Raw image relative coords
 
-					// If the channel data requested is outside the image area simply 0-pad it
-					if (requestedRawXpos < 0 || requestedRawYpos < 0 ||
-						requestedRawXpos >= rawImageWidth || requestedRawYpos >= rawImageHeight)
-						pixelChannelValue = 0;
-					else
-						// Load from global memory the raw image data (whatever channel this one is)
-						pixelChannelValue = image[requestedRawYpos * rawImageWidth + requestedRawXpos];
+                    // If the channel data requested is outside the image area simply 0-pad it
+                    if (requestedRawXpos < 0 || requestedRawYpos < 0 ||
+                        requestedRawXpos >= rawImageWidth || requestedRawYpos >= rawImageHeight)
+                        pixelChannelValue = 0;
+                    else
+                        // Load from global memory the raw image data (whatever channel this one is)
+                        pixelChannelValue = image[requestedRawYpos * rawImageWidth + requestedRawXpos];
 
-					channelSum += constantKernel[ky * KERNEL_WIDTH + kx] * pixelChannelValue;
-				}
-			}
+                    channelSum += constantKernel[ky * KERNEL_WIDTH + kx] * pixelChannelValue;
+                }
+            }
 
-			// Store result back to global memory in the result image
-			resultImage[rawImageY * rawImageWidth + rawImageX] = static_cast<unsigned char>(channelSum / constantKernelSum);
-		}
-	}
+            // Store result back to global memory in the result image
+            resultImage[rawImageY * rawImageWidth + rawImageX] = static_cast<unsigned char>(channelSum / constantKernelSum);
+        }
+    }
 }
 
 
 bool simpleGPUConvolution(PPMFile& imageFile) {
 
-	cudaEvent_t start, stop;   // Get up some metrics to measure GPU execution time
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
+    cudaEvent_t start, stop;   // Get up some metrics to measure GPU execution time
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
 
     cudaError_t err = cudaSuccess;
     int pixelSize = sizeof(RGB);
@@ -88,10 +88,10 @@ bool simpleGPUConvolution(PPMFile& imageFile) {
         gaussianKernel.end(), 0.0f,
         [](float sum, const float& elem) { 
                 return sum + elem; 
-		}
-	);
+        }
+    );
 
-	cudaEventRecord(start, 0); // Start recording (including host<->device transfers)
+    cudaEventRecord(start, 0); // Start recording (including host<->device transfers)
     
     err = cudaMemcpyToSymbol(constantKernelSum, &kernelSum, sizeof(float));
     if (err != cudaSuccess) {
@@ -111,7 +111,7 @@ bool simpleGPUConvolution(PPMFile& imageFile) {
         std::cout << "Failed to allocate global memory: " << cudaGetErrorString(err);
         return false;
     }
-	err = cudaMalloc((void **)&d_resultImage, rawImageSize);
+    err = cudaMalloc((void **)&d_resultImage, rawImageSize);
     if (err != cudaSuccess) {
         std::cout << "Failed to allocate global memory: " << cudaGetErrorString(err);
         return false;
@@ -137,23 +137,23 @@ bool simpleGPUConvolution(PPMFile& imageFile) {
         return false;
     }
 
-	// Stop event
-	cudaEventRecord(stop, 0);
-	cudaEventSynchronize(stop);
-	float elapsedTime;
-	cudaEventElapsedTime(&elapsedTime, start, stop);
+    // Stop event
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    float elapsedTime;
+    cudaEventElapsedTime(&elapsedTime, start, stop);
 
-	std::cout << "GPU execution time: " << elapsedTime << " ms" << std::endl;
-	
-	cudaEventDestroy(start);
-	cudaEventDestroy(stop);
+    std::cout << "GPU execution time: " << elapsedTime << " ms" << std::endl;
+    
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 
     err = cudaFree(d_image);
     if (err != cudaSuccess) {
         std::cout << "Freeing device memory failed: " << cudaGetErrorString(err);
         return false;
     }
-	err = cudaFree(d_resultImage);
+    err = cudaFree(d_resultImage);
     if (err != cudaSuccess) {
         std::cout << "Freeing device memory failed: " << cudaGetErrorString(err);
         return false;
@@ -165,18 +165,18 @@ bool simpleGPUConvolution(PPMFile& imageFile) {
         return false;
     }
 
-	return true;
+    return true;
 }
 
 int main(int argc, char* argv[]) {
     PPMFile originalPPM;
-	originalPPM.readPPM("univpm.ppm");
+    originalPPM.readPPM("univpm.ppm");
 
     if (simpleGPUConvolution(originalPPM) == false)
-		return -1;
+        return -1;
 
-	originalPPM.writePPM("univpmGPU.ppm");
+    originalPPM.writePPM("univpmGPU.ppm");
 
-	return 0;
+    return 0;
 }
 

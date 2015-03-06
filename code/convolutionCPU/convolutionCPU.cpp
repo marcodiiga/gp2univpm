@@ -35,8 +35,8 @@ std::array<std::array<float, KERNEL_WIDTH>, KERNEL_HEIGHT> gaussianKernel = {{ /
 
 void simpleCPUConvolution (PPMFile& image) {
 
-	CStopWatch m_tmr; // Create a timer to measure execution
-	m_tmr.startTimer();
+    CStopWatch m_tmr; // Create a timer to measure execution
+    m_tmr.startTimer();
 
     float kernelSum = std::accumulate(gaussianKernel.begin(), // Get the sum of the kernel elements
         gaussianKernel.end(), 0.0f,
@@ -79,20 +79,20 @@ void simpleCPUConvolution (PPMFile& image) {
         }
     }
 
-	m_tmr.stopTimer();
-	double sec = m_tmr.getElapsedTimeInSeconds();
-	double msec = sec * 1000;
-	std::cout << "CPU execution time: " << msec << " ms" << std::endl;
+    m_tmr.stopTimer();
+    double sec = m_tmr.getElapsedTimeInSeconds();
+    double msec = sec * 1000;
+    std::cout << "CPU execution time: " << msec << " ms" << std::endl;
 }
 
 int main (int argc, char* argv[]) {
-	PPMFile originalPPM;
-	originalPPM.readPPM("univpm.ppm");
-	
+    PPMFile originalPPM;
+    originalPPM.readPPM("univpm.ppm");
+    
     simpleCPUConvolution(originalPPM);
 
-	originalPPM.writePPM("univpmCPU.ppm");
+    originalPPM.writePPM("univpmCPU.ppm");
 
-	return 0;
+    return 0;
 }
 
