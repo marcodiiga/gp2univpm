@@ -41,6 +41,7 @@ public:
 	int width() const { return m_width; }
 	int height() const { return m_height; }
 	RGB& getPixel(int x, int y);
+    RGB* getImageRawData() { return m_rgbData.data(); }
 
 private:
 	int m_width, m_height, m_maxVal;

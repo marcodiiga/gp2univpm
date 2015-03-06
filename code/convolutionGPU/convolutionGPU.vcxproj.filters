@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="simpleCPUConv.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PPMReader.cpp">
+    <CudaCompile Include="convolutionGPU.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\common\PPMReader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PPMReader.h">
+    <ClInclude Include="..\common\PPMReader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
