@@ -43,8 +43,8 @@ __global__ void convolutionGPUKernel(unsigned char* image, unsigned char* result
     int rawImageY = blockDim.y * blockIdx.y + threadIdx.y;
 
 	for (; rawImageY < rawImageHeight; rawImageY += blockDim.y * gridDim.y)	{ // Work while this thread is inside the image data, otherwise bail out
-																			  // proceed to X-grid exhaustion then consume Y
-		for (rawImageX = startRawImageX; rawImageX < rawImageWidth; rawImageX += blockDim.x * gridDim.x)	{
+
+		for (rawImageX = startRawImageX; rawImageX < rawImageWidth; rawImageX += blockDim.x * gridDim.x)	{ // proceed to X-grid exhaustion then consume Y
 
 			float channelSum = 0;
 			for (int ky = 0; ky < KERNEL_HEIGHT; ++ky) { // Kernel loop
