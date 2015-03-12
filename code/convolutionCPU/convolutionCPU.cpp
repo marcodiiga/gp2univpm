@@ -43,13 +43,13 @@ void simpleCPUConvolution (PPMFile& image) {
         });
     });
 
-	CStopWatch m_tmr; // Create a timer to measure execution
-	m_tmr.startTimer();
+    CStopWatch m_tmr; // Create a timer to measure execution
+    m_tmr.startTimer();
 
-	PPMFile inputImage(image); // Create a copy of the original image
+    PPMFile inputImage(image); // Create a copy of the original image
 
-	for (int y = 0; y < inputImage.height(); ++y) { // Image loop per each pixel
-		for (int x = 0; x < inputImage.width(); ++x) {
+    for (int y = 0; y < inputImage.height(); ++y) { // Image loop per each pixel
+        for (int x = 0; x < inputImage.width(); ++x) {
 
             float rSum = 0, gSum = 0, bSum = 0;
             for (int ky = 0; ky < KERNEL_HEIGHT; ++ky) { // Kernel loop
@@ -61,10 +61,10 @@ void simpleCPUConvolution (PPMFile& image) {
 
                     // If the pixel requested is outside the image area simply 0-pad it
                     if (requestedXpos < 0 || requestedYpos < 0 ||
-						requestedXpos >= inputImage.width() || requestedYpos >= inputImage.height())
+                        requestedXpos >= inputImage.width() || requestedYpos >= inputImage.height())
                         pixelValue = { 0, 0, 0 };
                     else
-						pixelValue = inputImage.getPixel(requestedXpos, requestedYpos);
+                        pixelValue = inputImage.getPixel(requestedXpos, requestedYpos);
                     
                     float kernelValue = gaussianKernel[ky][kx];
 

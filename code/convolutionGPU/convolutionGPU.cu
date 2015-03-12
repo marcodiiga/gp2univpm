@@ -130,8 +130,8 @@ bool simpleGPUConvolution(PPMFile& imageFile) {
         return false;
     }
 
-	// Rationale: 512x512 image with RGB channels (3 bytes) -> 512*3 / 64 = 24 X blocks, 512 / 16 = 16 Y blocks
-	// if grid coverage doesn't work, use KERNEL_GRID_FILLS_ALL_THE_IMAGE = 0
+    // Rationale: 512x512 image with RGB channels (3 bytes) -> 512*3 / 64 = 24 X blocks, 512 / 16 = 16 Y blocks
+    // if grid coverage doesn't work, use KERNEL_GRID_FILLS_ALL_THE_IMAGE = 0
     dim3 gridSize(24, 32), blockSize(64, 16);
     convolutionGPUKernel<<<gridSize, blockSize>>> (d_image, d_resultImage, imageFile.width() * pixelSize, imageFile.height(), pixelSize);
     err = cudaGetLastError();
