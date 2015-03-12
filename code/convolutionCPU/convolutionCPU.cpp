@@ -35,9 +35,6 @@ std::array<std::array<float, KERNEL_WIDTH>, KERNEL_HEIGHT> gaussianKernel = {{ /
 
 void simpleCPUConvolution (PPMFile& image) {
 
-    CStopWatch m_tmr; // Create a timer to measure execution
-    m_tmr.startTimer();
-
     float kernelSum = std::accumulate(gaussianKernel.begin(), // Get the sum of the kernel elements
         gaussianKernel.end(), 0.0f,
         [](float sum, const std::array<float, KERNEL_WIDTH>& elem) { 
@@ -46,23 +43,28 @@ void simpleCPUConvolution (PPMFile& image) {
         });
     });
 
-    for (int y = 0; y < image.height(); ++y) { // Image loop per each pixel
-        for (int x = 0; x < image.width(); ++x) {
+	CStopWatch m_tmr; // Create a timer to measure execution
+	m_tmr.startTimer();
+
+	PPMFile inputImage(image); // Create a copy of the original image
+
+	for (int y = 0; y < inputImage.height(); ++y) { // Image loop per each pixel
+		for (int x = 0; x < inputImage.width(); ++x) {
 
             float rSum = 0, gSum = 0, bSum = 0;
             for (int ky = 0; ky < KERNEL_HEIGHT; ++ky) { // Kernel loop
                 for (int kx = 0; kx < KERNEL_WIDTH; ++kx) {
 
                     RGB pixelValue;
-                    int requestedXpos = x - KERNEL_WIDTH  / 2 + kx; // Image-relative coords
-                    int requestedYpos = y - KERNEL_HEIGHT / 2 + ky;
+                    int requestedXpos = x - (KERNEL_WIDTH  / 2 - kx); // Image-relative coords
+                    int requestedYpos = y - (KERNEL_HEIGHT / 2 - ky);
 
                     // If the pixel requested is outside the image area simply 0-pad it
                     if (requestedXpos < 0 || requestedYpos < 0 ||
-                        requestedXpos >= image.width() || requestedYpos >= image.height())
+						requestedXpos >= inputImage.width() || requestedYpos >= inputImage.height())
                         pixelValue = { 0, 0, 0 };
                     else
-                        pixelValue = image.getPixel (requestedXpos, requestedYpos);
+						pixelValue = inputImage.getPixel(requestedXpos, requestedYpos);
                     
                     float kernelValue = gaussianKernel[ky][kx];
 

@@ -20,6 +20,10 @@
 #include <iostream>
 #include <numeric>
 
+// Caveat: if the CUDA kernel grid is chosen as to entirely fill the input image (all of its RGB channels), this should remain active in order to
+// gain some performance. If there aren't enough threads to work on the input image, this should be put to 0
+ #define KERNEL_GRID_FILLS_ALL_THE_IMAGE 1
+
 // Can be calculated with custom parameters as follows:
 // exp( -0.5 * (pow((x-mean)/sigma, 2.0) + pow((y-mean)/sigma,2.0)) ) / (2 * M_PI * sigma * sigma)
 #define KERNEL_WIDTH 5
@@ -42,36 +46,39 @@ __global__ void convolutionGPUKernel(unsigned char* image, unsigned char* result
     int rawImageX = startRawImageX;
     int rawImageY = blockDim.y * blockIdx.y + threadIdx.y;
 
+#ifndef KERNEL_GRID_FILLS_ALL_THE_IMAGE
     for (; rawImageY < rawImageHeight; rawImageY += blockDim.y * gridDim.y)	{ // Work while this thread is inside the image data, otherwise bail out
+      for (rawImageX = startRawImageX; rawImageX < rawImageWidth; rawImageX += blockDim.x * gridDim.x)	{ // proceed to X-grid exhaustion then consume Y
+#endif
 
-        for (rawImageX = startRawImageX; rawImageX < rawImageWidth; rawImageX += blockDim.x * gridDim.x)	{ // proceed to X-grid exhaustion then consume Y
+    float channelSum = 0;
+    for (int ky = 0; ky < KERNEL_HEIGHT; ++ky) { // Kernel loop
+        for (int kx = 0; kx < KERNEL_WIDTH; ++kx) {
 
-            float channelSum = 0;
-            for (int ky = 0; ky < KERNEL_HEIGHT; ++ky) { // Kernel loop
-                for (int kx = 0; kx < KERNEL_WIDTH; ++kx) {
-    
-                    float pixelChannelValue;
-                    int requestedRawXpos = rawImageX - (KERNEL_WIDTH  / 2 + kx) * pixelSize; // Raw image relative coords
-                    int requestedRawYpos = rawImageY - (KERNEL_HEIGHT / 2 + ky); // Raw image relative coords
+            unsigned char pixelChannelValue;
+            int requestedRawXpos = rawImageX - (KERNEL_WIDTH  / 2 - kx) * pixelSize; // Raw image relative coords
+            int requestedRawYpos = rawImageY - (KERNEL_HEIGHT / 2 - ky); // Raw image relative coords
 
-                    // If the channel data requested is outside the image area simply 0-pad it
-                    if (requestedRawXpos < 0 || requestedRawYpos < 0 ||
-                        requestedRawXpos >= rawImageWidth || requestedRawYpos >= rawImageHeight)
-                        pixelChannelValue = 0;
-                    else
-                        // Load from global memory the raw image data (whatever channel this one is)
-                        pixelChannelValue = image[requestedRawYpos * rawImageWidth + requestedRawXpos];
+            // If the channel data requested is outside the image area simply 0-pad it
+            if (requestedRawXpos < 0 || requestedRawYpos < 0 ||
+                requestedRawXpos >= rawImageWidth || requestedRawYpos >= rawImageHeight)
+                pixelChannelValue = 0;
+            else
+                // Load from global memory the raw image data (whatever channel this one is)
+                pixelChannelValue = image[requestedRawYpos * rawImageWidth + requestedRawXpos];
 
-                    channelSum += constantKernel[ky * KERNEL_WIDTH + kx] * pixelChannelValue;
-                }
-            }
-
-            // Store result back to global memory in the result image
-            resultImage[rawImageY * rawImageWidth + rawImageX] = static_cast<unsigned char>(channelSum / constantKernelSum);
+            channelSum += pixelChannelValue * constantKernel[ky * KERNEL_WIDTH + kx];
         }
     }
-}
 
+    // Store result back to global memory in the result image
+    resultImage[rawImageY * rawImageWidth + rawImageX] = static_cast<unsigned char>(channelSum / constantKernelSum);
+
+#ifndef KERNEL_GRID_FILLS_ALL_THE_IMAGE
+       }
+     }
+#endif
+}
 
 bool simpleGPUConvolution(PPMFile& imageFile) {
 
@@ -123,11 +130,13 @@ bool simpleGPUConvolution(PPMFile& imageFile) {
         return false;
     }
 
-    dim3 gridSize(64, 64), blockSize(64, 16);
+	// Rationale: 512x512 image with RGB channels (3 bytes) -> 512*3 / 64 = 24 X blocks, 512 / 16 = 16 Y blocks
+	// if grid coverage doesn't work, use KERNEL_GRID_FILLS_ALL_THE_IMAGE = 0
+    dim3 gridSize(24, 32), blockSize(64, 16);
     convolutionGPUKernel<<<gridSize, blockSize>>> (d_image, d_resultImage, imageFile.width() * pixelSize, imageFile.height(), pixelSize);
     err = cudaGetLastError();
     if (err != cudaSuccess) {
-        std::cout << "Kernel launch failed" << cudaGetErrorString(err);
+        std::cout << "Kernel launch failed: " << cudaGetErrorString(err);
         return false;
     }
 

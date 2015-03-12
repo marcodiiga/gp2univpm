@@ -32,8 +32,7 @@ struct RGB {
 
 class PPMFile {
 public:
-    PPMFile();
-    ~PPMFile();
+	// Default ctor/copy ctor/move ctor/dtor
 
     void readPPM (const char*);
     void writePPM(const char*);

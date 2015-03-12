@@ -21,9 +21,6 @@ PPMException::PPMException(const char* msg) {
     m_details = msg;
 }
 
-PPMFile::PPMFile() {}
-PPMFile::~PPMFile() {}
-
 void PPMFile::writePPM(const char* filePath) {
     std::ofstream file;
     file.open(filePath, std::ios::binary);
